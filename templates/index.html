@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Predict the compressive strength of concrete mixes using a Machine Learning model — Extra Trees Regressor with 92.12% R² accuracy." />
+  <title>Concrete Strength Prediction System | ML-Powered Tool</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+
+<body>
+
+  <!-- ─── LOADING OVERLAY ─────────────────────────────────── -->
+  <div id="loader" class="loader-overlay">
+    <div class="loader-box">
+      <div class="loader-ring"></div>
+      <div class="loader-ring loader-ring--2"></div>
+      <div class="loader-ring loader-ring--3"></div>
+      <p class="loader-text mt-3">Initializing AI Engine…</p>
+    </div>
+  </div>
+
+  <!-- ─── NAVBAR ────────────────────────────────────────────── -->
+  <nav class="navbar navbar-expand-lg sticky-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+        <div class="brand-icon">
+          <i class="bi bi-hexagon-fill"></i>
+          <i class="bi bi-cpu-fill brand-icon-inner"></i>
+        </div>
+        <span class="brand-text">ConcreteAI</span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto align-items-center gap-1">
+          <li class="nav-item"><a class="nav-link" href="#hero">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="#predict">Predict</a></li>
+          <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+          <li class="nav-item"><a class="nav-link" href="#workflow">Workflow</a></li>
+          <li class="nav-item">
+            <button id="themeToggle" class="btn btn-theme-toggle ms-2" title="Toggle Dark Mode">
+              <i class="bi bi-sun-fill" id="themeIcon"></i>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── HERO SECTION ─────────────────────────────────────── -->
+  <section id="hero" class="hero-section">
+    <!-- Animated background particles -->
+    <div class="hero-particles" id="heroParticles"></div>
+    <!-- Grid overlay -->
+    <div class="hero-grid"></div>
+
+    <div class="container">
+      <div class="row align-items-center min-vh-100 py-5">
+
+        <!-- Left: Text content -->
+        <div class="col-lg-6 hero-content" data-aos="fade-right">
+          <div class="hero-badge mb-3">
+            <i class="bi bi-stars"></i>
+            <span>ML-Powered · 92.12% Accuracy</span>
+          </div>
+
+          <h1 class="hero-title">
+            Concrete Strength
+            <span class="gradient-text">Prediction</span>
+          </h1>
+
+          <p class="hero-subtitle">
+            Predict the future compressive strength of concrete mixes using
+            state-of-the-art Machine Learning. Powered by an Extra Trees
+            Regressor trained on 1,030 real-world samples.
+          </p>
+
+          <div class="hero-actions d-flex flex-wrap gap-3 mt-4">
+            <a href="#predict" class="btn btn-primary-glow btn-lg">
+              <i class="bi bi-lightning-charge-fill me-2"></i>Start Prediction
+            </a>
+            <a href="#about" class="btn btn-outline-glow btn-lg">
+              <i class="bi bi-info-circle me-2"></i>Learn More
+            </a>
+          </div>
+
+          <!-- Quick stats row -->
+          <div class="hero-stats d-flex flex-wrap gap-4 mt-5">
+            <div class="hero-stat">
+              <span class="hero-stat-value" data-count="92.12" data-suffix="%">0%</span>
+              <span class="hero-stat-label">R² Score</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-value" data-count="1030" data-suffix="">0</span>
+              <span class="hero-stat-label">Samples</span>
+            </div>
+            <div class="hero-stat-divider"></div>
+            <div class="hero-stat">
+              <span class="hero-stat-value" data-count="8" data-suffix="">0</span>
+              <span class="hero-stat-label">Features</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: SVG Illustration -->
+        <div class="col-lg-6 hero-illustration" data-aos="fade-left">
+          <div class="illustration-wrapper">
+            <svg viewBox="0 0 520 460" xmlns="http://www.w3.org/2000/svg" class="hero-svg">
+              <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#0EA5E9;stop-opacity:1" />
+                </linearGradient>
+                <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#22C55E;stop-opacity:0.9" />
+                  <stop offset="100%" style="stop-color:#0EA5E9;stop-opacity:0.9" />
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Background glow circles -->
+              <circle cx="260" cy="230" r="180" fill="url(#grad1)" opacity="0.06" />
+              <circle cx="260" cy="230" r="130" fill="url(#grad1)" opacity="0.08" />
+
+              <!-- Building blocks (concrete structure) -->
+              <g class="svg-building">
+                <rect x="80" y="270" width="80" height="120" rx="4" fill="url(#grad1)" opacity="0.85" />
+                <rect x="170" y="230" width="80" height="160" rx="4" fill="url(#grad1)" opacity="0.7" />
+                <rect x="260" y="200" width="80" height="190" rx="4" fill="url(#grad2)" opacity="0.85" />
+                <rect x="350" y="250" width="80" height="140" rx="4" fill="url(#grad1)" opacity="0.7" />
+                <!-- Ground line -->
+                <rect x="60" y="390" width="400" height="6" rx="3" fill="url(#grad1)" opacity="0.4" />
+                <!-- Window details -->
+                <rect x="95" y="285" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="125" y="285" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="95" y="320" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="125" y="320" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="185" y="250" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="215" y="250" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="185" y="285" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="215" y="285" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="275" y="220" width="20" height="20" rx="2" fill="white" opacity="0.4" />
+                <rect x="305" y="220" width="20" height="20" rx="2" fill="white" opacity="0.4" />
+                <rect x="275" y="255" width="20" height="20" rx="2" fill="white" opacity="0.4" />
+                <rect x="305" y="255" width="20" height="20" rx="2" fill="white" opacity="0.4" />
+                <rect x="365" y="265" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+                <rect x="395" y="265" width="20" height="20" rx="2" fill="white" opacity="0.3" />
+              </g>
+
+              <!-- AI brain / Neural network overlay -->
+              <g class="svg-network" filter="url(#glow)">
+                <!-- Nodes -->
+                <circle cx="180" cy="100" r="14" fill="url(#grad2)" opacity="0.9" />
+                <circle cx="260" cy="65" r="18" fill="url(#grad1)" opacity="0.95" />
+                <circle cx="340" cy="100" r="14" fill="url(#grad2)" opacity="0.9" />
+                <circle cx="220" cy="155" r="12" fill="url(#grad1)" opacity="0.85" />
+                <circle cx="300" cy="155" r="12" fill="url(#grad1)" opacity="0.85" />
+                <!-- Connections -->
+                <line x1="180" y1="100" x2="260" y2="65" stroke="#2563EB" stroke-width="2" opacity="0.5" />
+                <line x1="340" y1="100" x2="260" y2="65" stroke="#0EA5E9" stroke-width="2" opacity="0.5" />
+                <line x1="180" y1="100" x2="220" y2="155" stroke="#22C55E" stroke-width="1.5" opacity="0.5" />
+                <line x1="340" y1="100" x2="300" y2="155" stroke="#22C55E" stroke-width="1.5" opacity="0.5" />
+                <line x1="260" y1="65" x2="220" y2="155" stroke="#2563EB" stroke-width="1.5" opacity="0.4" />
+                <line x1="260" y1="65" x2="300" y2="155" stroke="#2563EB" stroke-width="1.5" opacity="0.4" />
+                <line x1="220" y1="155" x2="300" y2="155" stroke="#0EA5E9" stroke-width="1.5" opacity="0.4" />
+                <!-- Center label -->
+                <text x="260" y="69" text-anchor="middle" fill="white" font-size="10" font-weight="700">AI</text>
+              </g>
+
+              <!-- Floating data chips -->
+              <g class="svg-chip svg-chip-1">
+                <rect x="30" y="140" width="110" height="36" rx="18" fill="white" opacity="0.9" />
+                <text x="85" y="163" text-anchor="middle" fill="#2563EB" font-size="11" font-weight="600">92.12%
+                  Accuracy</text>
+              </g>
+              <g class="svg-chip svg-chip-2">
+                <rect x="380" y="140" width="110" height="36" rx="18" fill="white" opacity="0.9" />
+                <text x="435" y="163" text-anchor="middle" fill="#22C55E" font-size="11" font-weight="600">1030
+                  Samples</text>
+              </g>
+              <g class="svg-chip svg-chip-3">
+                <rect x="190" y="410" width="140" height="36" rx="18" fill="white" opacity="0.9" />
+                <text x="260" y="433" text-anchor="middle" fill="#0EA5E9" font-size="11" font-weight="600">Extra Trees
+                  Regressor</text>
+              </g>
+            </svg>
+
+            <!-- Glow orbs -->
+            <div class="glow-orb glow-orb-1"></div>
+            <div class="glow-orb glow-orb-2"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <a href="#about" class="scroll-indicator">
+      <i class="bi bi-chevron-down"></i>
+    </a>
+  </section>
+
+  <!-- ─── ABOUT MODEL SECTION ───────────────────────────────── -->
+  <section id="about" class="section-padding about-section">
+    <div class="container">
+
+      <div class="section-header text-center" data-aos="fade-up">
+        <div class="section-badge">About the Model</div>
+        <h2 class="section-title">Powered by Cutting-Edge ML</h2>
+        <p class="section-subtitle">
+          Our prediction engine is built on a rigorously trained Extra Trees
+          Regressor — delivering industry-grade accuracy for structural engineering.
+        </p>
+      </div>
+
+      <div class="row g-4 mt-3">
+        <!-- Card 1: Algorithm -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap stat-icon-blue">
+              <i class="bi bi-diagram-3-fill"></i>
+            </div>
+            <div class="stat-value">Extra Trees</div>
+            <div class="stat-label">Algorithm Used</div>
+            <div class="stat-desc">Regressor</div>
+            <div class="stat-progress-bar" style="--bar-width:100%;--bar-color:#2563EB"></div>
+          </div>
+        </div>
+
+        <!-- Card 2: Accuracy -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap stat-icon-green">
+              <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="stat-value counter" data-target="92.12" data-decimals="2" data-suffix="%">0%</div>
+            <div class="stat-label">Model Accuracy</div>
+            <div class="stat-desc">R² Score</div>
+            <div class="stat-progress-bar" style="--bar-width:92.12%;--bar-color:#22C55E"></div>
+          </div>
+        </div>
+
+        <!-- Card 3: Dataset -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap stat-icon-sky">
+              <i class="bi bi-database-fill"></i>
+            </div>
+            <div class="stat-value counter" data-target="1030" data-decimals="0" data-suffix="">0</div>
+            <div class="stat-label">Dataset Records</div>
+            <div class="stat-desc">Training Samples</div>
+            <div class="stat-progress-bar" style="--bar-width:85%;--bar-color:#0EA5E9"></div>
+          </div>
+        </div>
+
+        <!-- Card 4: Features -->
+        <div class="col-sm-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
+          <div class="stat-card glass-card">
+            <div class="stat-icon-wrap stat-icon-purple">
+              <i class="bi bi-sliders2-vertical"></i>
+            </div>
+            <div class="stat-value counter" data-target="8" data-decimals="0" data-suffix="">0</div>
+            <div class="stat-label">Input Features</div>
+            <div class="stat-desc">Parameters</div>
+            <div class="stat-progress-bar" style="--bar-width:80%;--bar-color:#A855F7"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── PREDICTION FORM SECTION ─────────────────────────── -->
+  <section id="predict" class="section-padding predict-section">
+    <div class="predict-bg-blob"></div>
+    <div class="container position-relative">
+
+      <div class="section-header text-center" data-aos="fade-up">
+        <div class="section-badge">AI Prediction</div>
+        <h2 class="section-title">Predict Concrete Strength</h2>
+        <p class="section-subtitle">
+          Enter the mix proportions below and let our ML model predict the
+          compressive strength instantly.
+        </p>
+      </div>
+
+      <!-- ── Input Mode Tab Switcher ── -->
+      <div class="row justify-content-center mt-4">
+        <div class="col-lg-10 col-xl-9">
+          <div class="input-mode-tabs glass-card" data-aos="fade-up" data-aos-delay="80">
+            <button class="mode-tab active" id="tabForm" onclick="switchInputMode('form')">
+              <i class="bi bi-ui-checks me-2"></i>Form Input
+            </button>
+            <button class="mode-tab" id="tabSlider" onclick="switchInputMode('slider')">
+              <i class="bi bi-sliders me-2"></i>Slider Controls
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── FORM PANEL ── -->
+      <div class="row justify-content-center mt-3" id="formPanel">
+        <div class="col-lg-10 col-xl-9">
+          <div class="prediction-form-card glass-card" data-aos="fade-up" data-aos-delay="100">
+
+            <form id="predictionForm" method="POST" action="/predict" novalidate>
+
+              <div class="row g-4">
+
+                <!-- Cement -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-bag-fill input-icon"></i>
+                      <input type="number" class="form-control modern-input" id="cement" name="cement" placeholder=" "
+                        step="0.01" min="0" max="800" required />
+                      <label class="floating-label" for="cement">Cement (kg/m³)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid cement value (0–800).</div>
+                  </div>
+                </div>
+
+                <!-- Blast Furnace Slag -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-fire input-icon"></i>
+                      <input type="number" class="form-control modern-input" id="slag" name="slag" placeholder=" "
+                        step="0.01" min="0" max="400" required />
+                      <label class="floating-label" for="slag">Blast Furnace Slag (kg/m³)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid slag value (0–400).</div>
+                  </div>
+                </div>
+
+                <!-- Fly Ash -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-wind input-icon"></i>
+                      <input type="number" class="form-control modern-input" id="flyash" name="flyash" placeholder=" "
+                        step="0.01" min="0" max="300" required />
+                      <label class="floating-label" for="flyash">Fly Ash (kg/m³)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid fly ash value (0–300).</div>
+                  </div>
+                </div>
+
+                <!-- Water -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-droplet-fill input-icon"></i>
+                      <input type="number" class="form-control modern-input" id="water" name="water" placeholder=" "
+                        step="0.01" min="0" max="400" required />
+                      <label class="floating-label" for="water">Water (kg/m³)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid water value (0–400).</div>
+                  </div>
+                </div>
+
+                <!-- Superplasticizer -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-flask-fill input-icon"></i>
+                      <input type="number" class="form-control modern-input" id="superplasticizer"
+                        name="superplasticizer" placeholder=" " step="0.01" min="0" max="40" required />
+                      <label class="floating-label" for="superplasticizer">Superplasticizer (kg/m³)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid superplasticizer value (0–40).</div>
+                  </div>
+                </div>
+
+                <!-- Coarse Aggregate -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-circle-fill input-icon"></i>
+                      <input type="number" class="form-control modern-input" id="coarseaggregate" name="coarseaggregate"
+                        placeholder=" " step="0.01" min="0" max="1400" required />
+                      <label class="floating-label" for="coarseaggregate">Coarse Aggregate (kg/m³)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid coarse aggregate value (0–1400).</div>
+                  </div>
+                </div>
+
+                <!-- Fine Aggregate -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-dot input-icon fs-4"></i>
+                      <input type="number" class="form-control modern-input" id="fineaggregate" name="fineaggregate"
+                        placeholder=" " step="0.01" min="0" max="1000" required />
+                      <label class="floating-label" for="fineaggregate">Fine Aggregate (kg/m³)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter a valid fine aggregate value (0–1000).</div>
+                  </div>
+                </div>
+
+                <!-- Age -->
+                <div class="col-sm-6 col-md-4">
+                  <div class="form-field">
+                    <div class="input-icon-wrap">
+                      <i class="bi bi-calendar3 input-icon"></i>
+                      <input type="number" class="form-control modern-input" id="age" name="age" placeholder=" "
+                        step="1" min="1" max="365" required />
+                      <label class="floating-label" for="age">Age (Days)</label>
+                      <div class="input-focus-line"></div>
+                    </div>
+                    <div class="invalid-feedback">Please enter age between 1 and 365 days.</div>
+                  </div>
+                </div>
+
+              </div><!-- /row g-4 -->
+
+              <!-- Form Buttons -->
+              <div class="form-buttons d-flex flex-wrap gap-3 justify-content-center mt-5">
+                <button type="submit" class="btn btn-primary-glow btn-lg px-5" id="predictBtn">
+                  <i class="bi bi-cpu-fill me-2"></i>
+                  <span id="predictBtnText">Predict Strength</span>
+                  <span id="predictBtnSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+                </button>
+                <button type="button" class="btn btn-outline-glow btn-lg px-5" id="resetBtn">
+                  <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Form
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════
+           SLIDER PANEL
+           ══════════════════════════════════════════════════════ -->
+      <div class="row justify-content-center mt-3" id="sliderPanel" style="display:none">
+        <div class="col-lg-10 col-xl-9">
+          <div class="slider-dashboard glass-card" data-aos="fade-up" data-aos-delay="100">
+
+            <!-- Dashboard Header -->
+            <div class="sd-header">
+              <div class="sd-header-left">
+                <div class="sd-header-icon"><i class="bi bi-speedometer2"></i></div>
+                <div>
+                  <div class="sd-header-title">Mix Design Dashboard</div>
+                  <div class="sd-header-sub">Drag sliders to configure your concrete mix parameters</div>
+                </div>
+              </div>
+              <button class="btn-slider-reset" id="sliderResetBtn" title="Reset to default values">
+                <i class="bi bi-arrow-repeat me-1"></i>Reset Defaults
+              </button>
+            </div>
+
+            <!-- Live Mix Preview Bar -->
+            <div class="sd-mix-preview">
+              <div class="sd-mix-label">Cementitious Content Distribution</div>
+              <div class="sd-mix-bar-wrap">
+                <div class="sd-mix-seg" id="mixSegCement"    style="--seg-color:#2563EB" title="Cement"></div>
+                <div class="sd-mix-seg" id="mixSegSlag"      style="--seg-color:#0EA5E9" title="Slag"></div>
+                <div class="sd-mix-seg" id="mixSegFlyash"    style="--seg-color:#A855F7" title="Fly Ash"></div>
+                <div class="sd-mix-seg" id="mixSegWater"     style="--seg-color:#38BDF8" title="Water"></div>
+              </div>
+              <div class="sd-mix-legend">
+                <span><span class="sdml-dot" style="background:#2563EB"></span>Cement</span>
+                <span><span class="sdml-dot" style="background:#0EA5E9"></span>Slag</span>
+                <span><span class="sdml-dot" style="background:#A855F7"></span>Fly Ash</span>
+                <span><span class="sdml-dot" style="background:#38BDF8"></span>Water</span>
+              </div>
+            </div>
+
+            <!-- Slider Grid -->
+            <div class="row g-4 mt-1" id="sliderGrid">
+
+              <!-- 1. Cement -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-cement">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-blue"><i class="bi bi-bag-fill"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Cement</div>
+                      <div class="sc-unit">kg/m³</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-cement"
+                        min="100" max="600" step="1" value="300" />
+                      <span class="sc-numbox-unit">kg/m³</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-blue" id="sf-cement"></div>
+                      <input type="range" class="sc-range" id="sr-cement"
+                        min="100" max="600" step="1" value="300"
+                        aria-label="Cement quantity slider" />
+                      <div class="sc-tooltip" id="st-cement">300</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>100 kg/m³</span><span>600 kg/m³</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-blue" id="spb-cement"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-cement">40%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. Blast Furnace Slag -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-slag">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-sky"><i class="bi bi-fire"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Blast Furnace Slag</div>
+                      <div class="sc-unit">kg/m³</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-slag"
+                        min="0" max="400" step="1" value="100" />
+                      <span class="sc-numbox-unit">kg/m³</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-sky" id="sf-slag"></div>
+                      <input type="range" class="sc-range" id="sr-slag"
+                        min="0" max="400" step="1" value="100"
+                        aria-label="Blast furnace slag quantity slider" />
+                      <div class="sc-tooltip" id="st-slag">100</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>0 kg/m³</span><span>400 kg/m³</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-sky" id="spb-slag"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-slag">25%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Fly Ash -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-flyash">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-purple"><i class="bi bi-wind"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Fly Ash</div>
+                      <div class="sc-unit">kg/m³</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-flyash"
+                        min="0" max="250" step="1" value="50" />
+                      <span class="sc-numbox-unit">kg/m³</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-purple" id="sf-flyash"></div>
+                      <input type="range" class="sc-range" id="sr-flyash"
+                        min="0" max="250" step="1" value="50"
+                        aria-label="Fly ash quantity slider" />
+                      <div class="sc-tooltip" id="st-flyash">50</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>0 kg/m³</span><span>250 kg/m³</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-purple" id="spb-flyash"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-flyash">20%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Water -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-water">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-teal"><i class="bi bi-droplet-fill"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Water</div>
+                      <div class="sc-unit">kg/m³</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-water"
+                        min="100" max="250" step="1" value="180" />
+                      <span class="sc-numbox-unit">kg/m³</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-teal" id="sf-water"></div>
+                      <input type="range" class="sc-range" id="sr-water"
+                        min="100" max="250" step="1" value="180"
+                        aria-label="Water quantity slider" />
+                      <div class="sc-tooltip" id="st-water">180</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>100 kg/m³</span><span>250 kg/m³</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-teal" id="spb-water"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-water">53%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5. Superplasticizer -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-superplasticizer">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-pink"><i class="bi bi-flask-fill"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Superplasticizer</div>
+                      <div class="sc-unit">kg/m³</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-superplasticizer"
+                        min="0" max="35" step="0.1" value="10" />
+                      <span class="sc-numbox-unit">kg/m³</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-pink" id="sf-superplasticizer"></div>
+                      <input type="range" class="sc-range" id="sr-superplasticizer"
+                        min="0" max="35" step="0.1" value="10"
+                        aria-label="Superplasticizer quantity slider" />
+                      <div class="sc-tooltip" id="st-superplasticizer">10</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>0 kg/m³</span><span>35 kg/m³</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-pink" id="spb-superplasticizer"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-superplasticizer">29%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 6. Coarse Aggregate -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-coarseaggregate">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-orange"><i class="bi bi-circle-fill"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Coarse Aggregate</div>
+                      <div class="sc-unit">kg/m³</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-coarseaggregate"
+                        min="700" max="1200" step="1" value="1000" />
+                      <span class="sc-numbox-unit">kg/m³</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-orange" id="sf-coarseaggregate"></div>
+                      <input type="range" class="sc-range" id="sr-coarseaggregate"
+                        min="700" max="1200" step="1" value="1000"
+                        aria-label="Coarse aggregate quantity slider" />
+                      <div class="sc-tooltip" id="st-coarseaggregate">1000</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>700 kg/m³</span><span>1200 kg/m³</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-orange" id="spb-coarseaggregate"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-coarseaggregate">60%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 7. Fine Aggregate -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-fineaggregate">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-yellow"><i class="bi bi-dot fs-4"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Fine Aggregate</div>
+                      <div class="sc-unit">kg/m³</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-fineaggregate"
+                        min="500" max="1000" step="1" value="750" />
+                      <span class="sc-numbox-unit">kg/m³</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-yellow" id="sf-fineaggregate"></div>
+                      <input type="range" class="sc-range" id="sr-fineaggregate"
+                        min="500" max="1000" step="1" value="750"
+                        aria-label="Fine aggregate quantity slider" />
+                      <div class="sc-tooltip" id="st-fineaggregate">750</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>500 kg/m³</span><span>1000 kg/m³</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-yellow" id="spb-fineaggregate"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-fineaggregate">50%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 8. Age -->
+              <div class="col-md-6">
+                <div class="slider-card" id="sc-age">
+                  <div class="sc-header">
+                    <div class="sc-icon-wrap sc-green"><i class="bi bi-calendar3"></i></div>
+                    <div class="sc-meta">
+                      <div class="sc-name">Curing Age</div>
+                      <div class="sc-unit">Days</div>
+                    </div>
+                    <div class="sc-value-box">
+                      <input type="number" class="sc-numbox" id="sv-age"
+                        min="1" max="365" step="1" value="28" />
+                      <span class="sc-numbox-unit">Days</span>
+                    </div>
+                  </div>
+                  <div class="sc-slider-wrap">
+                    <div class="sc-track-wrap">
+                      <div class="sc-track-bg"></div>
+                      <div class="sc-track-fill sc-fill-green" id="sf-age"></div>
+                      <input type="range" class="sc-range sc-range-green" id="sr-age"
+                        min="1" max="365" step="1" value="28"
+                        aria-label="Curing age slider" />
+                      <div class="sc-tooltip" id="st-age">28</div>
+                    </div>
+                  </div>
+                  <div class="sc-minmax">
+                    <span>1 Day</span>
+                    <div class="sc-age-milestones">
+                      <span>7d</span><span>28d</span><span>90d</span><span>180d</span>
+                    </div>
+                    <span>365 Days</span>
+                  </div>
+                  <div class="sc-pct-row">
+                    <div class="sc-pct-bar-wrap">
+                      <div class="sc-pct-bar sc-fill-green" id="spb-age"></div>
+                    </div>
+                    <span class="sc-pct-label" id="spl-age">7%</span>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /slider grid -->
+
+            <!-- Slider Panel Action Buttons -->
+            <div class="form-buttons d-flex flex-wrap gap-3 justify-content-center mt-5">
+              <button type="button" class="btn btn-primary-glow btn-lg px-5" id="sliderPredictBtn"
+                onclick="submitFromSliders()">
+                <i class="bi bi-cpu-fill me-2"></i>
+                <span>Predict Strength</span>
+              </button>
+              <button type="button" class="btn btn-outline-glow btn-lg px-5" id="sliderResetBtn2"
+                onclick="resetSliders()">
+                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Defaults
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Prediction Result (shown after submit) ── -->
+      <div class="row justify-content-center mt-5" id="resultSection" style="display:none!important">
+        <div class="col-lg-8 col-xl-7">
+          <div class="result-card glass-card" data-aos="zoom-in">
+
+            <div class="result-header">
+              <div class="result-badge">
+                <i class="bi bi-check-circle-fill me-2"></i>Prediction Complete
+              </div>
+            </div>
+
+            <div class="result-body row align-items-center g-4">
+
+              <!-- Circular Progress -->
+              <div class="col-md-5 text-center">
+                <div class="circular-progress-wrap">
+                  <svg class="circular-svg" viewBox="0 0 160 160">
+                    <circle class="cp-bg" cx="80" cy="80" r="68" />
+                    <circle class="cp-fill" id="cpFill" cx="80" cy="80" r="68" stroke-dasharray="427"
+                      stroke-dashoffset="427" />
+                  </svg>
+                  <div class="cp-label">
+                    <div class="cp-value" id="resultValue">0</div>
+                    <div class="cp-unit">MPa</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Result details -->
+              <div class="col-md-7">
+                <h3 class="result-title">Predicted Compressive Strength</h3>
+                <div class="result-strength-display">
+                  <span class="result-num" id="resultNum">0</span>
+                  <span class="result-unit-lg">MPa</span>
+                </div>
+
+                <!-- Strength classification badge -->
+                <div class="result-class-badge" id="resultClassBadge"></div>
+
+                <p class="result-note mt-3">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Based on your input mix proportions, the concrete is expected to achieve
+                  this compressive strength after the specified curing period.
+                </p>
+
+                <!-- Flask Jinja placeholder for server-side result -->
+                {% if prediction_text %}
+                <div class="alert alert-success-custom mt-3">
+                  <i class="bi bi-check2-circle me-2"></i>
+                  <strong>Server Result:</strong> {{ prediction_text }}
+                </div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── FEATURE IMPORTANCE SECTION ──────────────────────── -->
+  <section id="features" class="section-padding features-section">
+    <div class="container">
+
+      <div class="section-header text-center" data-aos="fade-up">
+        <div class="section-badge">Feature Importance</div>
+        <h2 class="section-title">What Influences Strength Most?</h2>
+        <p class="section-subtitle">
+          Ranked feature importance scores from the Extra Trees model — showing
+          which ingredients most significantly affect compressive strength.
+        </p>
+      </div>
+
+      <div class="row align-items-center mt-5 g-5">
+        <div class="col-lg-7" data-aos="fade-right">
+          <div class="chart-card glass-card">
+            <canvas id="featureChart" height="320"></canvas>
+          </div>
+        </div>
+
+        <div class="col-lg-5" data-aos="fade-left">
+          <div class="feature-legend">
+            <div class="feature-leg-item" data-feature="Cement">
+              <div class="feat-color" style="background:#2563EB"></div>
+              <div class="feat-info">
+                <div class="feat-name">Cement</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:31%;background:#2563EB"></div>
+                </div>
+                <div class="feat-pct">31%</div>
+              </div>
+            </div>
+            <div class="feature-leg-item" data-feature="Water">
+              <div class="feat-color" style="background:#0EA5E9"></div>
+              <div class="feat-info">
+                <div class="feat-name">Water</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:22%;background:#0EA5E9"></div>
+                </div>
+                <div class="feat-pct">22%</div>
+              </div>
+            </div>
+            <div class="feature-leg-item" data-feature="Age">
+              <div class="feat-color" style="background:#22C55E"></div>
+              <div class="feat-info">
+                <div class="feat-name">Age (Days)</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:18%;background:#22C55E"></div>
+                </div>
+                <div class="feat-pct">18%</div>
+              </div>
+            </div>
+            <div class="feature-leg-item" data-feature="Fine Aggregate">
+              <div class="feat-color" style="background:#A855F7"></div>
+              <div class="feat-info">
+                <div class="feat-name">Fine Aggregate</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:10%;background:#A855F7"></div>
+                </div>
+                <div class="feat-pct">10%</div>
+              </div>
+            </div>
+            <div class="feature-leg-item" data-feature="Coarse Aggregate">
+              <div class="feat-color" style="background:#F59E0B"></div>
+              <div class="feat-info">
+                <div class="feat-name">Coarse Aggregate</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:9%;background:#F59E0B"></div>
+                </div>
+                <div class="feat-pct">9%</div>
+              </div>
+            </div>
+            <div class="feature-leg-item" data-feature="Fly Ash">
+              <div class="feat-color" style="background:#EF4444"></div>
+              <div class="feat-info">
+                <div class="feat-name">Fly Ash</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:5%;background:#EF4444"></div>
+                </div>
+                <div class="feat-pct">5%</div>
+              </div>
+            </div>
+            <div class="feature-leg-item" data-feature="Slag">
+              <div class="feat-color" style="background:#EC4899"></div>
+              <div class="feat-info">
+                <div class="feat-name">Slag</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:3%;background:#EC4899"></div>
+                </div>
+                <div class="feat-pct">3%</div>
+              </div>
+            </div>
+            <div class="feature-leg-item" data-feature="Superplasticizer">
+              <div class="feat-color" style="background:#14B8A6"></div>
+              <div class="feat-info">
+                <div class="feat-name">Superplasticizer</div>
+                <div class="feat-bar-wrap">
+                  <div class="feat-bar" style="--w:2%;background:#14B8A6"></div>
+                </div>
+                <div class="feat-pct">2%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ─── PROJECT WORKFLOW SECTION ─────────────────────────── -->
+  <section id="workflow" class="section-padding workflow-section">
+    <div class="container">
+
+      <div class="section-header text-center" data-aos="fade-up">
+        <div class="section-badge">How It Works</div>
+        <h2 class="section-title">Project Workflow</h2>
+        <p class="section-subtitle">
+          From raw data to real-time ML predictions — a streamlined engineering
+          pipeline built for accuracy.
+        </p>
+      </div>
+
+      <div class="timeline-wrapper mt-5">
+
+        <div class="timeline-step" data-aos="fade-right">
+          <div class="timeline-icon-col">
+            <div class="timeline-icon tl-blue"><i class="bi bi-cloud-download-fill"></i></div>
+            <div class="timeline-connector"></div>
+          </div>
+          <div class="timeline-content glass-card">
+            <h5>Data Collection</h5>
+            <p>UCI ML Repository concrete dataset with 1,030 real-world samples across 9 variables.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-aos="fade-left">
+          <div class="timeline-icon-col">
+            <div class="timeline-icon tl-sky"><i class="bi bi-funnel-fill"></i></div>
+            <div class="timeline-connector"></div>
+          </div>
+          <div class="timeline-content glass-card">
+            <h5>Data Cleaning</h5>
+            <p>Handled missing values, removed duplicates, and normalized units for consistency.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-aos="fade-right">
+          <div class="timeline-icon-col">
+            <div class="timeline-icon tl-green"><i class="bi bi-bar-chart-line-fill"></i></div>
+            <div class="timeline-connector"></div>
+          </div>
+          <div class="timeline-content glass-card">
+            <h5>Exploratory Data Analysis</h5>
+            <p>Distribution plots, correlation heatmaps, and outlier detection using IQR method.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-aos="fade-left">
+          <div class="timeline-icon-col">
+            <div class="timeline-icon tl-purple"><i class="bi bi-tools"></i></div>
+            <div class="timeline-connector"></div>
+          </div>
+          <div class="timeline-content glass-card">
+            <h5>Feature Engineering</h5>
+            <p>Scaled features, built interaction terms, and selected the 8 most impactful predictors.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-aos="fade-right">
+          <div class="timeline-icon-col">
+            <div class="timeline-icon tl-orange"><i class="bi bi-gear-wide-connected"></i></div>
+            <div class="timeline-connector"></div>
+          </div>
+          <div class="timeline-content glass-card">
+            <h5>Model Training</h5>
+            <p>Compared 10+ algorithms with cross-validation; Extra Trees emerged as the best performer.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-aos="fade-left">
+          <div class="timeline-icon-col">
+            <div class="timeline-icon tl-blue"><i class="bi bi-diagram-3-fill"></i></div>
+            <div class="timeline-connector"></div>
+          </div>
+          <div class="timeline-content glass-card">
+            <h5>Extra Trees Regressor</h5>
+            <p>Achieved 92.12% R² score. Serialized model via Pickle for production deployment.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step" data-aos="fade-right">
+          <div class="timeline-icon-col">
+            <div class="timeline-icon tl-green"><i class="bi bi-lightning-charge-fill"></i></div>
+          </div>
+          <div class="timeline-content glass-card">
+            <h5>Real-Time Prediction</h5>
+            <p>Flask API serves instant predictions to this web interface in milliseconds.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── WHY THIS MODEL SECTION ───────────────────────────── -->
+  <section id="why" class="section-padding why-section">
+    <div class="container">
+
+      <div class="section-header text-center" data-aos="fade-up">
+        <div class="section-badge">Why Extra Trees?</div>
+        <h2 class="section-title">Why This Model?</h2>
+        <p class="section-subtitle">
+          Extra Trees Regressor was selected after rigorous benchmarking
+          across multiple algorithms for its blend of speed, accuracy, and reliability.
+        </p>
+      </div>
+
+      <div class="row g-4 mt-3">
+
+        <div class="col-sm-6 col-lg-3" data-aos="flip-left" data-aos-delay="0">
+          <div class="why-card glass-card">
+            <div class="why-icon why-icon-blue">
+              <i class="bi bi-bullseye"></i>
+            </div>
+            <h5>High Accuracy</h5>
+            <p>92.12% R² score — surpassing Random Forest, Gradient Boosting, and Linear Regression on this dataset.</p>
+            <div class="why-tag">R² = 0.9212</div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3" data-aos="flip-left" data-aos-delay="100">
+          <div class="why-card glass-card">
+            <div class="why-icon why-icon-green">
+              <i class="bi bi-lightning-fill"></i>
+            </div>
+            <h5>Fast Prediction</h5>
+            <p>Sub-millisecond inference time — thousands of predictions per second in production.</p>
+            <div class="why-tag">&lt;1 ms / sample</div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3" data-aos="flip-left" data-aos-delay="200">
+          <div class="why-card glass-card">
+            <div class="why-icon why-icon-sky">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <h5>Reliable Results</h5>
+            <p>Ensemble of 100 fully-randomized trees reduces variance and prevents overfitting.</p>
+            <div class="why-tag">No Overfitting</div>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-3" data-aos="flip-left" data-aos-delay="300">
+          <div class="why-card glass-card">
+            <div class="why-icon why-icon-purple">
+              <i class="bi bi-buildings-fill"></i>
+            </div>
+            <h5>Industry Relevant</h5>
+            <p>Validates concrete mix design before costly physical testing — saving time and materials.</p>
+            <div class="why-tag">ISO Compatible</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ────────────────────────────────────────────── -->
+  <footer class="site-footer">
+    <div class="footer-gradient"></div>
+    <div class="container position-relative">
+
+      <div class="row align-items-center g-4">
+
+        <div class="col-lg-4">
+          <div class="footer-brand d-flex align-items-center gap-2 mb-2">
+            <div class="brand-icon brand-icon-sm">
+              <i class="bi bi-hexagon-fill"></i>
+              <i class="bi bi-cpu-fill brand-icon-inner"></i>
+            </div>
+            <span class="brand-text">ConcreteAI</span>
+          </div>
+          <p class="footer-desc">
+            Concrete Compressive Strength Prediction System — powered by Machine Learning and modern web technologies.
+          </p>
+        </div>
+
+        <div class="col-lg-4 text-center">
+          <p class="footer-developer mb-1">
+            <i class="bi bi-person-circle me-1"></i>
+            Developed by <strong>Prakash Sarvaiya</strong>
+          </p>
+          <p class="footer-stack mb-0">
+            <span class="tech-badge">Python</span>
+            <span class="tech-badge">Flask</span>
+            <span class="tech-badge">Scikit-Learn</span>
+            <span class="tech-badge">Bootstrap 5</span>
+          </p>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="footer-links d-flex justify-content-lg-end justify-content-center gap-3">
+            <a href="https://github.com/" target="_blank" class="footer-link" title="GitHub">
+              <i class="bi bi-github"></i>
+              <span>GitHub</span>
+            </a>
+            <a href="https://linkedin.com/" target="_blank" class="footer-link" title="LinkedIn">
+              <i class="bi bi-linkedin"></i>
+              <span>LinkedIn</span>
+            </a>
+            <a href="#predict" class="footer-link" title="Try the model">
+              <i class="bi bi-cpu"></i>
+              <span>Try Model</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom mt-4 pt-4">
+        <p class="text-center mb-0">
+          © 2026 ConcreteAI · Extra Trees Regressor · Built with ❤ for Civil Engineering
+        </p>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom JS -->
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
