@@ -1,5 +1,5 @@
 """
-ConcreteAI — app.py
+NeuroConcrete — app.py
 Flask backend for Concrete Compressive Strength Prediction System.
 Uses a pre-trained Extra Trees Regressor (concrete_strength_model.pkl).
 """
