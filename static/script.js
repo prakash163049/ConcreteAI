@@ -1,5 +1,5 @@
 /**
- * ConcreteAI — script.js
+ * NeuroConcrete — script.js
  * Concrete Compressive Strength Prediction System
  * Handles: Loader, Theme, Navbar, Scroll animations, Counters,
  *          Chart.js, Form validation, Result display
@@ -47,7 +47,7 @@ function initThemeToggle() {
   const html = document.documentElement;
 
   // Restore saved preference
-  const saved = localStorage.getItem("concreteai-theme") || "dark";
+  const saved = localStorage.getItem("neuroconcrete-theme") || "dark";
   html.setAttribute("data-theme", saved);
   updateThemeIcon(icon, saved);
 
@@ -55,7 +55,7 @@ function initThemeToggle() {
     const current = html.getAttribute("data-theme");
     const next    = current === "dark" ? "light" : "dark";
     html.setAttribute("data-theme", next);
-    localStorage.setItem("concreteai-theme", next);
+    localStorage.setItem("neuroconcrete-theme", next);
     updateThemeIcon(icon, next);
     updateChartTheme(next);
   });
@@ -549,7 +549,7 @@ document.querySelectorAll('a[href^="#"]').forEach((a) => {
    12. EXPOSE showResult globally for Flask response handling
        (e.g., if Flask returns JSON and you switch to AJAX later)
    ═══════════════════════════════════════════════════════════════════ */
-window.ConcreteAI = { showResult, hideResult };
+window.NeuroConcrete = { showResult, hideResult };
 
 /* ═══════════════════════════════════════════════════════════════════
    13. INPUT MODE SWITCHER (Form ↔ Sliders)
