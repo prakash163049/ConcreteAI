@@ -10,82 +10,95 @@ import numpy as np
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
 
-# Column names — exactly as stored in the trained model's feature_names_in_
-# Verified by: model.feature_names_in_
-FEATURE_COLUMNS = ["cement", "slag", "ash", "water", "superplastic", "coarseagg", "fineagg", "age"]
+# ─── Feature Columns ──────────────────────────────────────────────
+# Must match the exact column names used during model training
+FEATURE_COLUMNS = [
+    "cement",
+    "slag",
+    "ash",
+    "water",
+    "superplastic",
+    "coarseagg",
+    "fineagg",
+    "age",
+]
 
-# ─── App Setup ────────────────────────────────────────────────────
+# ─── App Factory ──────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "concreteai-secret-key-2024")
+app.secret_key = os.environ.get("SECRET_KEY", "concreteai-secret-2024")
 
 # ─── Load Model ───────────────────────────────────────────────────
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "concrete_strength_model.pkl")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "concrete_strength_model.pkl")
 
+model = None
 try:
     with open(MODEL_PATH, "rb") as f:
         model = pickle.load(f)
     print(f"[OK] Model loaded from {MODEL_PATH}")
 except FileNotFoundError:
-    model = None
     print(f"[WARN] Model file not found at {MODEL_PATH}. Predictions will be disabled.")
-except Exception as e:
-    model = None
-    print(f"[ERROR] Failed to load model: {e}")
+except Exception as exc:
+    print(f"[ERROR] Failed to load model: {exc}")
+
+
+# ─── Helper ───────────────────────────────────────────────────────
+def _run_prediction(values: list) -> float:
+    """Run prediction using a DataFrame (avoids sklearn feature-name warnings)."""
+    try:
+        df = pd.DataFrame([values], columns=FEATURE_COLUMNS)
+        return float(model.predict(df)[0])
+    except Exception:
+        # Fallback: plain numpy array
+        arr = np.array([values], dtype=float)
+        return float(model.predict(arr)[0])
 
 
 # ─── Routes ───────────────────────────────────────────────────────
 @app.route("/")
 def index():
-    """Render the main page (no prediction yet)."""
+    """Render the main page."""
     return render_template("index.html", prediction_text=None)
 
 
 @app.route("/predict", methods=["POST"])
 def predict():
     """
-    Accept form data, run ML prediction, return updated page.
+    Handle HTML form submission and return an updated page.
 
-    Expected form fields:
+    Form fields expected:
         cement, slag, flyash, water, superplasticizer,
         coarseaggregate, fineaggregate, age
     """
     if model is None:
-        error_msg = "Model not loaded. Please ensure concrete_strength_model.pkl exists."
-        return render_template("index.html", prediction_text=error_msg)
+        return render_template(
+            "index.html",
+            prediction_text="Model not loaded. Ensure concrete_strength_model.pkl exists.",
+        )
 
     try:
-        # Parse inputs (same order as training features)
         values = [
-            float(request.form.get("cement",          0)),
-            float(request.form.get("slag",             0)),
-            float(request.form.get("flyash",           0)),
-            float(request.form.get("water",            0)),
-            float(request.form.get("superplasticizer", 0)),
-            float(request.form.get("coarseaggregate",  0)),
-            float(request.form.get("fineaggregate",    0)),
-            float(request.form.get("age",              28)),
+            float(request.form.get("cement",           0) or 0),
+            float(request.form.get("slag",             0) or 0),
+            float(request.form.get("flyash",           0) or 0),
+            float(request.form.get("water",            0) or 0),
+            float(request.form.get("superplasticizer", 0) or 0),
+            float(request.form.get("coarseaggregate",  0) or 0),
+            float(request.form.get("fineaggregate",    0) or 0),
+            float(request.form.get("age",             28) or 28),
         ]
 
-        # Wrap in DataFrame with training column names to avoid sklearn warnings
-        try:
-            features_df  = pd.DataFrame([values], columns=FEATURE_COLUMNS)
-            prediction   = model.predict(features_df)[0]
-        except Exception:
-            # Fallback: plain numpy array (still works, may show a warning)
-            features_df  = np.array([values])
-            prediction   = model.predict(features_df)[0]
+        prediction = _run_prediction(values)
+        result_text = f"Predicted Compressive Strength: {prediction:.2f} MPa"
 
-        result_text  = f"Predicted Compressive Strength: {prediction:.2f} MPa"
-
-    except (ValueError, TypeError) as e:
-        result_text = f"Invalid input values. Please check your entries. ({e})"
-    except Exception as e:
-        result_text = f"Prediction error: {e}"
+    except (ValueError, TypeError) as exc:
+        result_text = f"Invalid input values. Please check your entries. ({exc})"
+    except Exception as exc:
+        result_text = f"Prediction error: {exc}"
 
     return render_template("index.html", prediction_text=result_text)
 
 
-# ─── Optional JSON API endpoint ───────────────────────────────────
 @app.route("/api/predict", methods=["POST"])
 def api_predict():
     """
@@ -110,32 +123,45 @@ def api_predict():
         return jsonify({"status": "error", "message": "Model not loaded"}), 503
 
     try:
-        data   = request.get_json(force=True)
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({"status": "error", "message": "Invalid or missing JSON body"}), 400
+
         values = [
-            float(data.get("cement",          0)),
-            float(data.get("slag",             0)),
-            float(data.get("flyash",           0)),
-            float(data.get("water",            0)),
-            float(data.get("superplasticizer", 0)),
-            float(data.get("coarseaggregate",  0)),
-            float(data.get("fineaggregate",    0)),
-            float(data.get("age",             28)),
+            float(data.get("cement",           0) or 0),
+            float(data.get("slag",             0) or 0),
+            float(data.get("flyash",           0) or 0),
+            float(data.get("water",            0) or 0),
+            float(data.get("superplasticizer", 0) or 0),
+            float(data.get("coarseaggregate",  0) or 0),
+            float(data.get("fineaggregate",    0) or 0),
+            float(data.get("age",             28) or 28),
         ]
-        try:
-            features_df = pd.DataFrame([values], columns=FEATURE_COLUMNS)
-            prediction  = float(model.predict(features_df)[0])
-        except Exception:
-            features_df = np.array([values])
-            prediction  = float(model.predict(features_df)[0])
+
+        prediction = _run_prediction(values)
         return jsonify({
             "status":     "success",
             "prediction": round(prediction, 2),
             "unit":       "MPa",
         })
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 400
+
+    except (ValueError, TypeError) as exc:
+        return jsonify({"status": "error", "message": f"Invalid values: {exc}"}), 400
+    except Exception as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 500
+
+
+@app.route("/health")
+def health():
+    """Health-check endpoint for deployment platforms."""
+    return jsonify({
+        "status": "ok",
+        "model_loaded": model is not None,
+    })
 
 
 # ─── Entry Point ──────────────────────────────────────────────────
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    debug = os.environ.get("FLASK_DEBUG", "false").lower() == "true"
+    app.run(debug=debug, host="0.0.0.0", port=port)
